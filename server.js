@@ -5,6 +5,10 @@ const connectDB = require('./config/db');
 //connect db
 
 connectDB();
+// defining middleware
+//pahele hame middleware install kerne padte the abb nahi
+app.use(express.json({extended : false}));
+
 // display kerne ke liye
 app.get('/',(req,res)=>{
     res.send('API runing');
