@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 //library that we installed earliar
-const gravtar = require('gravatar');
+const gravatar = require('gravatar');
 //include this file also for validation result
-const {check , validationResult } = require('express-validator/check');
+const {check , validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken');
+const config = require('config');
 const Users = require('../../models/Users');
 // defining routes it is a post request
 // 1st we use get request from our server to test weather it is working or not
@@ -52,7 +54,7 @@ router.post('/',[
 
 
     //Get user gravatar
-    const avatar = gravtar.url(email , {
+    const avatar = gravatar.url(email , {
         s : 200,
         // s is for size
         r : 'pg',
@@ -64,11 +66,24 @@ router.post('/',[
     //Encrypt password using bcrypt
     // abhi yaha per salt variable lenge hashing ke liye
     const salt = await bcrypt.genSalt(10);
+    // abhi yaha per hash kara aur hash me do arguments pass kara 
     user.password = await bcrypt.hash(password,salt);
 
     //return json Web token
 
-    res.send('User routes');
+        const payload = {
+            user: {
+                id : user.id
+            }
+        }
+        jwt.sign(
+            payload ,
+            config.get('jwtSecret'),
+           {expiresIn : 360000},
+           (err, token) => {
+               if(err) throw err;
+               return res.json({token});
+           } );
     }
     catch(err){
         console.error(err);
