@@ -39,7 +39,7 @@ router.post('/' , [ auth,[
     check('skills' , 'skills is required')
     .not()
     .isEmpty()
-]] , async(req,res)=>{
+]] , async (req,res) => {
     //yaha per validation result tha vo errors me chala jayega
     const errors = validationResult(req);
     //ager  not of error is empty
@@ -47,8 +47,7 @@ router.post('/' , [ auth,[
         //return karega status 
         return res.status(400).json({errors : errors.array()});  
     }
-})
-// abhi ye saari field hamne req. body  se liya hai
+    // abhi ye saari field hamne req. body  se liya hai
 const {
     company ,
     website,
@@ -113,6 +112,224 @@ try{
     console.log('error occoured ', err);
     }
 
+})
+
+// Get api/profile/
+// Get all profile
+// public
+
+router.get('/',async(req,res) => {
+    try {
+        //abhi profiles me "Profile" model se find kar rahe hai mtlb sab profile find ker rahe hai aur use user model se populate bhi ker raha hai
+         const profiles = await Profile.find().populate('user' , ['name','avatar'])
+        res.json(profiles);
+
+
+    } catch (err) {
+        console.error('error occored' , err);
+        
+    }
+})
+
+// Get api/profile/user/:user_id
+// Get all profile by userID
+// public
+
+router.get('/',async(req,res) => {
+    try {
+        
+        const profile = await Profile.findOne({user:req.params.user_id}).populate('user' , ['name','avatar'])
+        if(!profile)
+        {
+            return res.status(400).json({msg : "there is no profile for the user"});
+        }
+        res.json(profile);
+
+
+    } catch (err) {
+        console.error('error occored' , err);   
+    }
+})
+
+
+// Delete api/profile/
+// Delete  profile,users & post
+// private
+
+router.delete('/',auth,async(req,res) => {
+    try {
+        //Profile model me find karega profile aur remove karega
+        //remove profile
+         await Profile.findOneAndRemove({user : req.user.id});
+        //remove user
+         await Users.findOneAndRemove({_id : req.user.id});
+
+        res.json({msg :" user removed "});
+
+
+    } catch (err) {
+        console.error('error occored' , err);
+        
+    }
+})
+
+// put api/profile/experience
+// Add profile exprience
+// private
+
+//put request lagayenge 
+router.put('/experience' ,[auth , [
+    check('title' , 'Title is required')
+    .not()
+    .isEmpty(),
+    check('company' , 'company is required')
+    .not()
+    .isEmpty(),
+    check('From Date' , 'From Date is required')
+    .not()
+    .isEmpty()
     
+
+]
+]  , 
+async(req,res) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(400).json({errors : errors.array()});
+    }
+    const {
+        title,
+        company,
+        location,
+        from,
+        to,
+        current,
+        description
+    } = req.body ;
+
+    const newExp = {
+        title,
+        company,
+        location,
+        from,
+        to,
+        current,
+        description 
+    } 
+
+    try {
+        
+        const profile = await  Profile.findOne({user : req.user.id});
+        //abhi ye push ker raha hai hamare naye experience ko
+        profile.experience.unshift(newExp);
+        //yaha per database me sab save ho raha hai
+        await profile.save();
+        res.json(profile);
+
+    } catch (error) {
+        console.log('error ocured' , error)
+    }
+})
+
+// Delete api/profile/experience/:exp_id
+// Delete  exprience from profile
+// private
+    router.delete('/experience/:exp_id',auth ,async(req,res)=>{
+        try {
+            const profile = await  Profile.findOne({user : req.user.id});
+            //get remove index
+            //getting the index
+            const removeIndex = profile.experience.map(item => item.id ).indexOf(req.params.exp_id)
+            //splicing the experience  
+            profile.experience.splice(removeIndex,1);
+            await profile.save();
+            res.json(profile);
+        } catch (error) {
+            console.error('error occured' , error);
+
+        }
+    })
+
+
+// put api/profile/education
+// Add profile education
+// private
+
+//put request lagayenge 
+router.put('/education' ,[auth , [
+    check('school' , 'School is required')
+    .not()
+    .isEmpty(),
+    check('Degree' , 'Degree is required')
+    .not()
+    .isEmpty(),
+    check('fieldOfstudy' , 'fieldOfstudy is required')
+    .not()
+    .isEmpty(),
+    check('from' , 'from date  is required')
+    .not()
+    .isEmpty()
+    
+
+]
+]  , 
+async(req,res) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(400).json({errors : errors.array()});
+    }
+    const {
+        school,
+        degree,
+        fieldOfstudy,
+        from,
+        to,
+        current,
+        description
+    } = req.body ;
+
+    const newEdu = {
+        school,
+        degree,
+        fieldOfstudy,
+        from,
+        to,
+        current,
+        description 
+    } 
+
+    try {
+        
+        const profile = await  Profile.findOne({user : req.user.id});
+        //abhi ye push ker raha hai hamare naye experience ko
+        profile.education.unshift(newEdu);
+        //yaha per database me sab save ho raha hai
+        await profile.save();
+        res.json(profile);
+
+    } catch (error) {
+        console.log('error ocured' , error)
+    }
+})
+
+// Delete api/profile/education/:edu_id
+// Delete  education from profile
+// private
+    router.delete('/education/:edu_id',auth ,async(req,res)=>{
+        try {
+            const profile = await  Profile.findOne({user : req.user.id});
+            //get remove index
+            //getting the index
+            const removeIndex = profile.education.map(item => item.id ).indexOf(req.params.edu_id)
+            //splicing the education  
+            profile.education.splice(removeIndex,1);
+            await profile.save();
+            res.json(profile);
+        } catch (error) {
+            console.error('error occured' , error);
+
+        }
+    })
+
 
 module.exports = router;
