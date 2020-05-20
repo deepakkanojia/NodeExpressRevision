@@ -49,4 +49,39 @@ try {
 })
 })
 
+ // res.send('posts routes');
+//3 @private
+//2@get particular post
+//1 @get  /api/posts/:id
+router.get('/:id',auth ,async(req,res)=>{
+    try {
+        // takikng posts to display all the posts from recent date
+       const post = await Post.findById(req.params.id); 
+       res.json(post);
+    } catch (error) {
+        console.log('error', error);
+    }
+    })
+
+
+     // res.send('posts routes');
+//3 @private
+//2@DELETE particular post
+//1 @DELETE  /api/posts/:id
+router.delete('/:id',auth ,async(req,res)=>{
+    try { 
+        // takikng posts to display all the posts from recent date
+       const post = await Post.findById(req.params.id); 
+        //check on user]
+        if(post.user.toString() !== req.user.id)
+        {
+            return res.status(401).json({msg : 'User not Authorized'});
+        }
+
+       res.json(post);
+    } catch (error) {
+        console.log('error', error);
+    }
+    })
+    
 module.exports = router;
