@@ -77,10 +77,53 @@ router.delete('/:id',auth ,async(req,res)=>{
         {
             return res.status(401).json({msg : 'User not Authorized'});
         }
-
-       res.json(post);
+            await post.remove();
+            res.json({msg : 'Post have been removed'})
     } catch (error) {
         console.log('error', error);
+    }
+    })
+
+    //3 @private
+//2@Put particular post
+//1 @Put  /api/posts/like/:id
+router.put('/likes/:id' , auth , async(req,res)=>{
+try {
+    //abhi ye post model me find karega uski id se req.params.id is liye lagaya hai ki vo url se lele
+    const post = await Post.findById(req.params.id);
+    //check if post has been already present by the user liked
+    if(post.like.filter(like => like.user.toString()=== req.user.id).length > 0){
+        return res.json(400).json({msg : 'post already liked'});
+    }
+    post.likes.unshift({user : req.user.id});
+    await post.save();
+    req.json(post.likes);
+
+} catch (error) {
+    console.error('error is there', error);
+}
+})
+
+
+ //3 @private
+//2@Put particular post
+//1 @Put  /api/posts/unlike/:id
+router.put('/unlikes/:id' , auth , async(req,res)=>{
+    try {
+        //abhi ye post model me find karega uski id se req.params.id is liye lagaya hai ki vo url se lele
+        const post = await Post.findById(req.params.id);
+        //check if post has been already present by the user liked
+        if(post.like.filter(like => like.user.toString()=== req.user.id).length === 0){
+            return res.json(400).json({msg : 'post has been not liked'});
+        }
+       //get remove index
+       const removeIndex = post.likes.map(like => like.user.toString()).indexOf(req.user.id);
+       post.like.splice(removeIndex,1);
+        await post.save();
+        req.json(post.likes);
+    
+    } catch (error) {
+        console.error('error is there', error);
     }
     })
     
